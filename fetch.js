@@ -6,7 +6,7 @@ const buttonDoes = document.getElementById("button-do");
 const spanResponseStatus = document.getElementById("span-response-status");
 const spanResponseContent = document.getElementById("span-response-content");
 const inputWindowUrl = document.getElementById("input-window-url");
-
+const checkboxBody = document.getElementById("checkbox-body");
 
 function whenDocumentLoaded(event) {
     loadContent();
@@ -15,6 +15,19 @@ function whenDocumentLoaded(event) {
             inputWindowUrl.value = tabs[0].url;
         })
     }
+}
+
+async function getBody() {
+    const [tab] = await browser.tabs.query({active: true, currentWindow: true});
+    const res = await browser.scripting.executeScript({
+        target:  {tabId: tab.id},
+        func: () => {
+            return document.body.innerHTML;
+        }
+    });
+    const bodyText = res[0].result;
+    
+    return bodyText;
 }
 
 document.addEventListener("DOMContentLoaded", whenDocumentLoaded)
@@ -52,22 +65,48 @@ async function doSomething() {
     saveContent();
 
     let res = null;
+    let dsError = "";
+    try {
+        if (method === "post") {
+            let body = textareaOptional.value;
+            try {
+                if (checkboxBody.checked) {
+                    const pageBody = (await getBody()).replace(/^\s+|\s+$/g, '')
+                    if (body) {
+                        JSON.parse(body)
+                        const index = body.lastIndexOf("}")
+                        if (index === -1) {
+                            dsError = "'}' not found expect JSON Object at root";
+                            return console.error("'}' not found expect JSON Object at root"); 
+                        }
+                        body = body.substring(0, index) + `,"dsDocumentBody": ${JSON.stringify(pageBody)} }`; 
+                    } else {
+                        body = `{"dsDocumentBody": ${JSON.stringify(pageBody)}}` 
+                    }
+                }
+            } catch (error) {
+                dsError = error;
+                console.error("not valid json:\n", error);
+            }
+            res = await fetch(url, {
+                body: body ? body : "",
+                method: "POST",
+            })
+        } else {
+            res = await fetch(url, {});
+        }
 
-    if (method === "post") {
-        const body = textareaOptional.value; 
-        res = await fetch(url, {
-            body: body ? body : "",
-            method: "POST",
-            mode: "no-cors"
-        })    
-    } else {
-        res = await fetch(url, {
-            mode: "no-cors"
-        });
-    }
-    if (res) {
-        spanResponseStatus.textContent = res.status.toString();
-        spanResponseContent.textContent = res.text();
+        if (res) {
+            spanResponseStatus.textContent = res.status.toString();
+            let resText =  await res.text(); 
+            spanResponseContent.textContent = resText;
+        } else {
+            spanResponseStatus.textContent = "666"
+            spanResponseContent.textContent = "Unknown error" 
+        }
+    } catch(error) {
+        spanResponseStatus.textContent = "666";
+        spanResponseContent.textContent = error;
     }
 }
 
@@ -75,6 +114,7 @@ function saveContent() {
     localStorage.setItem("url", hostname.value);
     localStorage.setItem("body", textareaOptional.value);    
     localStorage.setItem("method", selectMethod.value);    
+    localStorage.setItem("checked", checkboxBody.checked ? "true" : "false");    
 }
 
 function loadContent() {
@@ -82,10 +122,12 @@ function loadContent() {
         localStorage.getItem("url"),
         localStorage.getItem("body"),
         localStorage.getItem("method"),
+        localStorage.getItem("checked"),
     ];
 
     if (val[0]) hostname.value = val[0];
     if (val[1]) textareaOptional.value = val[1];
     if (val[2]) selectMethod.value = val[2];
+    if (val[3]) checkboxBody.checked = true;
 }
 
