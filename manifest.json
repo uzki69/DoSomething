@@ -1,0 +1,30 @@
+{
+    "manifest_version": 2,
+    "name": "Do something",
+    "version": "1.0",
+
+    "description": "Do something",
+    "icons": {
+        "48": "icons/dosomething-48.png"
+    },
+
+    "browser_action": {
+        "default_icon": {
+            "48": "icons/dosomething-48.png"
+        },
+        "default_popup": "index.html"
+    },
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "uzakichan11224@gmail.com",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
+        }
+    },
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ]
+}

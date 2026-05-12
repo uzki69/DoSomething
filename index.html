@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do something</title>
+    <link rel="icon" href="icons/something-48.png">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            outline: 0;
+        }
+
+        body {
+            background-color: #181818;
+            color: #EEEEEE;
+            font-family: sans-serif;
+            min-width: 400px;   
+        }
+
+        .box {
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            width: 90%;
+            row-gap: 4px;
+            padding: 1rem 0;
+        }
+        .box > input {
+            padding: 0.2em;
+            border: 1px solid black;
+        }
+        .box button {
+            width: fit-content;
+            padding: 0.4em;
+            color: #EEEEEE;
+            background-color: hsl(160, 91%, 23%);
+            border: 1px solid hsl(160, 100%, 35%);
+        }
+        .box button:hover {
+            background-color: hsl(160, 91%, 32%);
+        }
+        .box button:active {
+            background-color: hsl(160, 91%, 16%) !important;
+        }
+        .box > select {
+            padding: 0.1em;
+            width: fit-content;
+        }
+        .hide {
+            display: none !important;
+        }
+        .flex-c {
+            display: flex;
+            flex-direction: column;
+            row-gap: 4px;
+        }
+        .box textarea {
+            padding: 0.2em;
+        }
+
+        .right {
+            display: flex;
+            justify-content: end;
+        }
+
+        .box label {
+            padding-right: 4px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="box">
+        <label for="input-host">Hostname</label>
+        <input type="text" id="input-host" placeholder="http://localhost:12345/">
+        <label for="input-window-url">Current url (sent as param)</label>
+        <input type="text"  id="input-window-url">
+        <select id="select-method">
+            <option value="get">GET</option>
+            <option value="post">POST</option>
+        </select>
+        <span class="flex-c hide" id="span-optional">
+            <label for="textarea-optional">Optional</label>
+            <textarea id="textarea-optional" autocomplete="off" rows="4" placeholder="request body"></textarea>
+        </span>
+        <div class="right">
+            <button id="button-do">Do something??</button>
+        </div>
+        <p>Status: <span id="span-response-status">?</span></p>
+        <p>Content: <span id="span-response-content">?</span></p>
+    </div>
+    <script type="module" src="fetch.js"></script>
+</body>
+</html>
