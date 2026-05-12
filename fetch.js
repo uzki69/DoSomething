@@ -54,11 +54,14 @@ async function doSomething() {
         return;
     }
 
+    
     const url = new URL(host);
-
+    
     if (!inputWindowUrl.value) {
         spanResponseStatus.textContent = "no current url defined"
     }
+
+    spanResponseContent.textContent = "..." 
 
     url.searchParams.append("dsCurrentURL", inputWindowUrl.value);
 
