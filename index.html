@@ -78,8 +78,10 @@
     <div class="box">
         <label for="input-host">Hostname</label>
         <input type="text" id="input-host" placeholder="http://localhost:12345/">
-        <label for="input-window-url">Current url (sent as param)</label>
-        <input type="text"  id="input-window-url">
+        <div>
+            <label for="checkbox-window-url">Send Current url as param</label>
+            <input type="checkbox"  id="checkbox-window-url">
+        </div>
         <select id="select-method">
             <option value="get">GET</option>
             <option value="post">POST</option>
@@ -92,6 +94,8 @@
                 <input type="checkbox" id="checkbox-body">
             </div>
         </span>
+        <label for="textarea-headers">Headers (json)</label>
+        <textarea id="textarea-headers" autocomplete="off" rows="4" placeholder='e.g. {"Content-Type": "application/json"}'></textarea>
         <div class="right">
             <button id="button-do">Do something??</button>
         </div>

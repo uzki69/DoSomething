@@ -3,7 +3,7 @@ so it can escape the hard javascript reality and use whatever language you want
 
 This extension is dependant of a server and not works alone
 
-CORS: origin moz-extension://*
+CORS: origin = moz-extension://*
 
 ## GET
 `http://localhost:12345/dosomething?dsCurrentURL=URL`

@@ -5,14 +5,17 @@ const textareaOptional = document.getElementById("textarea-optional");
 const buttonDoes = document.getElementById("button-do");
 const spanResponseStatus = document.getElementById("span-response-status");
 const spanResponseContent = document.getElementById("span-response-content");
-const inputWindowUrl = document.getElementById("input-window-url");
+const checkboxWindowUrl = document.getElementById("checkbox-window-url");
 const checkboxBody = document.getElementById("checkbox-body");
+const textareaHeaders = document.getElementById("textarea-headers")
+
+let _currentUrl = ""
 
 function whenDocumentLoaded(event) {
     loadContent();
     if (browser) {
         browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
-            inputWindowUrl.value = tabs[0].url;
+            _currentUrl = tabs[0].url;
         })
     }
 }
@@ -45,33 +48,60 @@ selectMethod.onchange = (event) => {
     val === "get" ? spanOptional.classList.add("hide") : spanOptional.classList.remove("hide");
 }
 
+function setErrorValues(status, message) {
+    if (status != null) {
+        spanResponseStatus.textContent = status
+    }
+    if (message != null) {
+        spanResponseContent.textContent = message
+    }
+}
+
 async function doSomething() {
     const host = hostname.value;
     const method = selectMethod.value;
     
     if (!host) {
-        spanResponseStatus.textContent = "no hostname defined"
+        setErrorValues(null, "no hostname defined")
         return;
     }
 
     
     const url = new URL(host);
     
-    if (!inputWindowUrl.value) {
-        spanResponseStatus.textContent = "no current url defined"
+    setErrorValues(null, "...")
+
+    if (checkboxWindowUrl.checked) {
+        if (!_currentUrl) {
+            setErrorValues(null, "Could not retrieve current URL");
+            return
+        }
+        url.searchParams.append("dsCurrentURL", _currentUrl);
     }
 
-    spanResponseContent.textContent = "..." 
-
-    url.searchParams.append("dsCurrentURL", inputWindowUrl.value);
 
     saveContent();
 
     let res = null;
     let dsError = "";
+    let inputHeaders = textareaHeaders.value;
+    let reqHeaders = null;
+    if (inputHeaders) {
+        try {
+            reqHeaders = JSON.parse(inputHeaders)
+
+        } catch(err) {
+            setErrorValues(666, err)
+            return
+        }
+        
+    }
+
     try {
         if (method === "post") {
             let body = textareaOptional.value;
+            
+            // appending body as json
             try {
                 if (checkboxBody.checked) {
                     const pageBody = (await getBody()).replace(/^\s+|\s+$/g, '')
@@ -79,8 +109,7 @@ async function doSomething() {
                         JSON.parse(body)
                         const index = body.lastIndexOf("}")
                         if (index === -1) {
-                            dsError = "'}' not found expect JSON Object at root";
-                            return console.error("'}' not found expect JSON Object at root"); 
+                            throw "'}' not found expect JSON Object at root";
                         }
                         body = body.substring(0, index) + `,"dsDocumentBody": ${JSON.stringify(pageBody)} }`; 
                     } else {
@@ -88,15 +117,21 @@ async function doSomething() {
                     }
                 }
             } catch (error) {
-                dsError = error;
-                console.error("not valid json:\n", error);
+               throw error
             }
+            console.log(reqHeaders)
+            // POST
             res = await fetch(url, {
                 body: body ? body : "",
                 method: "POST",
+                headers: reqHeaders ?  new Headers(reqHeaders) : undefined
             })
         } else {
-            res = await fetch(url, {});
+            // GET
+            res = await fetch(url, {
+                method: "GET",
+                headers: reqHeaders ? new Headers(reqHeaders) : undefined,
+            });
         }
 
         if (res) {
@@ -117,7 +152,9 @@ function saveContent() {
     localStorage.setItem("url", hostname.value);
     localStorage.setItem("body", textareaOptional.value);    
     localStorage.setItem("method", selectMethod.value);    
-    localStorage.setItem("checked", checkboxBody.checked ? "true" : "false");    
+    localStorage.setItem("checked", checkboxBody.checked ? "true" : "false");
+    localStorage.setItem("headers", textareaHeaders.value);
+    localStorage.setItem("checkCurrentUrl", checkboxWindowUrl.checked ? "true" : "false");
 }
 
 function loadContent() {
@@ -126,11 +163,15 @@ function loadContent() {
         localStorage.getItem("body"),
         localStorage.getItem("method"),
         localStorage.getItem("checked"),
+        localStorage.getItem("headers"),
+        localStorage.getItem("checkCurrentUrl"),
     ];
 
     if (val[0]) hostname.value = val[0];
     if (val[1]) textareaOptional.value = val[1];
     if (val[2]) selectMethod.value = val[2];
-    if (val[3]) checkboxBody.checked = true;
+    if (val[3] === "true") checkboxBody.checked = true;
+    if (val[4]) textareaHeaders.value = val[4];
+    if (val[5] === "true") checkboxWindowUrl.checked = true;
 }
 
